@@ -1,4 +1,4 @@
-# My First Python Program 
+#  First Python Program 
 print ("Welcome to MetricMind")
 name =  input("Enter your name: ")
 age = int(input("Enter your age: "))
