@@ -10,6 +10,10 @@
   "devDependencies": {
     "@cubejs-backend/firebolt-driver": "^1.7.3",
     "@cubejs-backend/postgres-driver": "^1.7.3",
-    "@cubejs-backend/server": "^1.7.3"
+    "@cubejs-backend/server": "^1.7.3",
+    "@cubejs-backend/snowflake-driver": "^1.7.4"
+  },
+  "dependencies": {
+    "snowflake-sdk": "^3.1.0"
   }
 }
