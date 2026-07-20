@@ -1,0 +1,96 @@
+cubes:
+  - name: superstore_cleaned
+    sql_table: "\"RETAIL\".\"SUPERSTORE_CLEANED\""
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: category
+        sql: "{CUBE}.\"Category\""
+        type: string
+
+      - name: city
+        sql: "{CUBE}.\"City\""
+        type: string
+
+      - name: country
+        sql: "{CUBE}.\"Country\""
+        type: string
+
+      - name: customer_id
+        sql: "{CUBE}.\"Customer ID\""
+        type: string
+
+      - name: customer_name
+        sql: "{CUBE}.\"Customer Name\""
+        type: string
+
+      - name: market
+        sql: "{CUBE}.\"Market\""
+        type: string
+
+      - name: order_id
+        sql: "{CUBE}.\"Order ID\""
+        type: string
+
+      - name: order_priority
+        sql: "{CUBE}.\"Order Priority\""
+        type: string
+
+      - name: product_id
+        sql: "{CUBE}.\"Product ID\""
+        type: string
+
+      - name: product_name
+        sql: "{CUBE}.\"Product Name\""
+        type: string
+
+      - name: region
+        sql: "{CUBE}.\"Region\""
+        type: string
+
+      - name: segment
+        sql: "{CUBE}.\"Segment\""
+        type: string
+
+      - name: ship_mode
+        sql: "{CUBE}.\"Ship Mode\""
+        type: string
+
+      - name: state
+        sql: "{CUBE}.\"State\""
+        type: string
+
+      - name: sub_category
+        sql: "{CUBE}.\"Sub Category\""
+        type: string
+
+      - name: order_date
+        sql: "{CUBE}.\"Order Date\""
+        type: time
+
+      - name: ship_date
+        sql: "{CUBE}.\"Ship Date\""
+        type: time
+
+    measures:
+      - name: count
+        type: count
+
+      - name: discount
+        sql: "{CUBE}.\"Discount\""
+        type: sum
+
+      - name: quantity
+        sql: "{CUBE}.\"Quantity\""
+        type: sum
+
+      - name: shipping_cost
+        sql: "{CUBE}.\"Shipping Cost\""
+        type: sum
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+
