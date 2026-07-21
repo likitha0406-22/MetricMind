@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: stg_superstore
+    description: "Staging model for Superstore dataset"
+
+    columns:
+      - name: order_id
+        tests:
+          - not_null
+
+      - name: customer_id
+        tests:
+          - not_null
+
+      - name: sales
+        tests:
+          - not_null
+
+      - name: profit
+        tests:
+          - not_null
