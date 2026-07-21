@@ -1,0 +1,79 @@
+Cube Rest API Queries
+ 
+CUBE REST API ENDPOINT: http://localhost:4000/cubejs-api/v1/load
+
+Authentication :metricmind_cube_local_secret_2026
+
+TOTAL SALES API QUERY
+{
+  "measures": [
+    "superstore_cleaned.total_sales"
+  ],
+  "dimensions": [],
+  "timeDimensions": []
+}
+TOTAL CUSTOMERS API QUERY
+{
+  "measures": [
+    "superstore_cleaned.total_customers"
+  ],
+  "dimensions": [],
+  "timeDimensions": []
+}
+TOTAL ORDERS API QUERY
+{
+  "measures": [
+    "superstore_cleaned.total_orders"
+  ],
+  "dimensions": [],
+  "timeDimensions": []
+}
+MONTHLY SALES TREND
+{
+  "measures": [
+    "superstore_cleaned.total_sales"
+  ],
+  "dimensions": [],
+  "timeDimensions": [
+    {
+      "dimension": "superstore_cleaned.order_date",
+      "granularity": "month"
+    }
+  ]
+}
+CATEGORY-WISE SALES
+{
+  "measures": [
+    "superstore_cleaned.total_sales"
+  ],
+  "dimensions": [
+    "superstore_cleaned.category"
+  ],
+  "timeDimensions": []
+}
+MONTHLY ORDERS TREND
+{
+  "measures": [
+    "superstore_cleaned.total_orders"
+  ],
+  "dimensions": [],
+  "timeDimensions": [
+    {
+      "dimension": "superstore_cleaned.order_date",
+      "granularity": "month"
+    }
+  ]
+}
+MONTHLY REVENUE TREND 
+{
+  "measures": [
+    "superstore_cleaned.total_sales"
+  ],
+  "dimensions": [],
+  "timeDimensions": [
+    {
+      "dimension": "superstore_cleaned.order_date",
+      "granularity": "month"
+    }
+  ]
+}
