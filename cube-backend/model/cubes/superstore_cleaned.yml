@@ -90,6 +90,18 @@ cubes:
         sql: "{CUBE}.\"Shipping Cost\""
         type: sum
 
+      - name: total_sales
+        sql: "{CUBE}.\"Sales\""
+        type : sum
+
+      - name: total_orders
+        sql:  "{CUBE}.\"Order ID\""
+        type: count_distinct
+
+      - name: total_customers
+        sql: "{CUBE}.\"Customer ID\""
+        type: count_distinct
+
     pre_aggregations:
       # Pre-aggregation definitions go here.
       # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
