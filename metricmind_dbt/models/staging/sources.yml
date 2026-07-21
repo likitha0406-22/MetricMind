@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: retail
+    database: METRICMIND_DB
+    schema: RETAIL
+    tables:
+      - name: SUPERSTORE_CLEANED
+      
