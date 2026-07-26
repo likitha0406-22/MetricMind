@@ -1,0 +1,58 @@
+cubes:
+  - name: monthly_dashboard_summary
+    sql_table: "\"RETAIL\".\"MONTHLY_DASHBOARD_SUMMARY\""
+    data_source: default
+
+    joins: []
+
+    dimensions:
+      - name: category
+        sql: "{CUBE}.\"CATEGORY\""
+        type: string
+
+      - name: month_name
+        sql: "{CUBE}.\"MONTH_NAME\""
+        type: string
+
+      - name: year
+        sql: "{CUBE}.\"YEAR\""
+        type: number
+
+      - name: month_number
+        sql: "{CUBE}.\"MONTH_NUMBER\""
+        type: number
+
+      
+
+    measures:
+      - name: count
+        type: count
+
+      - name: total_sales
+        sql: "{CUBE}.\"TOTAL_SALES\""
+        type: sum
+
+      - name: total_revenue
+        sql: "{CUBE}.\"TOTAL_REVENUE\""
+        type: sum
+  
+      -  name: total_orders
+         sql: "{CUBE}.\"TOTAL_ORDERS\""
+         type: sum
+
+      -  name: total_customers
+         sql: "{CUBE}.\"TOTAL_CUSTOMERS\""
+         type: sum
+
+      -  name: total_profit
+         sql: "{CUBE}.\"TOTAL_PROFIT\""
+         type: sum
+          
+      - name: total_shipping_cost
+        sql: "{CUBE}.\"TOTAL_SHIPPING_COST\""
+        type: sum
+
+    pre_aggregations:
+      # Pre-aggregation definitions go here.
+      # Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
+
