@@ -1,0 +1,69 @@
+Cube Rest API Queries
+ 
+CUBE REST API ENDPOINT: http://localhost:4000/cubejs-api/v1/load
+
+Authentication : metricmind_cube_local_secret_2026
+
+TOTAL SALES API QUERY
+{
+  "measures": [
+    "monthly_dashboard_summary.total_sales"
+  ]
+}
+TOTAL ORDERS API QUERY
+{
+  "measures": [
+    "monthly_dashboard_summary.total_orders"
+  ]
+}
+TOTAL REVENUE API QUERY(SALES=REVENUE)
+{
+  "measures": [
+    "monthly_dashboard_summary.total_revenue"
+  ]
+}
+
+
+TOTAL CUSTOMERS API QUERY
+{
+  "measures": [
+    "monthly_dashboard_summary.total_customers"
+  ]
+}
+MONTHLY SALES TREND
+{
+  "measures": [
+    "monthly_dashboard_summary.total_sales"
+  ],
+  "dimensions": [
+    "monthly_dashboard_summary.month_name"
+  ]
+}
+
+CATEGORY-WISE SALES
+{
+  "measures": [
+    "monthly_dashboard_summary.total_sales"
+  ],
+  "dimensions": [
+    "monthly_dashboard_summary.category"
+  ]
+}
+MONTHLY REVENUE TREND
+{
+  "measures": [
+    "monthly_dashboard_summary.total_revenue"
+  ],
+  "dimensions": [
+    "monthly_dashboard_summary.month_name"
+  ]
+}
+MONTHLY ORDERS TREND
+{
+  "measures": [
+    "monthly_dashboard_summary.total_orders"
+  ],
+  "dimensions": [
+    "monthly_dashboard_summary.month_name"
+  ]
+}
