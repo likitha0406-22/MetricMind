@@ -66,3 +66,12 @@
 - Investigated the Git issue blocking Sneha's push (`APP/streamlit_project`) and coordinated with Shouib to resolve it.
 - Followed up with teammates for timely status updates and completion of pending work.
 - Planned the next phase of integration, testing, and review activities.
+## 31 July
+
+- Pulled latest repository changes.
+- Verified project folder structure.
+- Installed Node.js and npm.
+- Successfully launched the Chat UI on localhost:3000.
+- Verified Python and LangChain installation.
+- Identified Ollama as the remaining dependency for backend integration.
+- Planned full project integration and testing.
