@@ -5,3 +5,9 @@
 
 
 
+backend/venv/
+.env
+__pycache__/
+*.pyc
+node_modules/
+.next/
