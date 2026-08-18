@@ -3,760 +3,268 @@ import pandas as pd
 import requests
 import json
 
-# --------------------------------------------------
-# PAGE CONFIG
-# --------------------------------------------------
-
-st.set_page_config(
-    page_title="MetricMind Dashboard",
-    page_icon="📊",
-    layout="wide"
-)
-# --------------------------------------------------
-# DASHBOARD HEADER
-# --------------------------------------------------
+st.set_page_config(page_title="MetricMind Dashboard", page_icon="📊", layout="wide")
 
 st.title("📊 MetricMind")
+st.subheader("Retail Business Intelligence & Analytics Dashboard")
+st.caption("⚡ Analytics powered by Cube API & Snowflake")
+st.success("🟢 Live Dashboard")
 
-st.subheader(
-    "Retail Business Intelligence & Analytics Dashboard"
-)
-
-st.caption(
-    "⚡ Analytics powered by Cube API & Snowflake"
-)
-
-st.success(
-    "🟢 Live Dashboard"
-)
-# --------------------------------------------------
-# CUSTOM DASHBOARD STYLING
-# --------------------------------------------------
-
-st.markdown(
-    """
-    <style>
-
-    /* Main page */
-    .main {
-        padding-top: 1rem;
-    }
-
-    /* KPI metric cards */
-    div[data-testid="stMetric"] {
-        background-color: rgba(255, 255, 255, 0.05);
-        padding: 18px;
-        border-radius: 12px;
-        border: 1px solid rgba(128, 128, 128, 0.25);
-    }
-
-    /* KPI labels */
-    div[data-testid="stMetricLabel"] {
-        font-size: 0.9rem;
-    }
-
-    /* KPI values */
-    div[data-testid="stMetricValue"] {
-        font-size: 1.6rem;
-        font-weight: 700;
-    }
-
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        border-right: 1px solid rgba(128, 128, 128, 0.2);
-    }
-
-    /* Success / insight box */
-    div[data-testid="stAlert"] {
-        border-radius: 12px;
-    }
-
-    /* Dataframe */
-    div[data-testid="stDataFrame"] {
-        border-radius: 12px;
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-# --------------------------------------------------
-# CUBE API
-# --------------------------------------------------
+st.markdown("""
+<style>
+.main {padding-top:1rem;}
+div[data-testid="stMetric"] {background-color:rgba(255,255,255,.05);padding:18px;border-radius:12px;border:1px solid rgba(128,128,128,.25);}
+div[data-testid="stMetricValue"] {font-size:1.6rem;font-weight:700;}
+section[data-testid="stSidebar"] {border-right:1px solid rgba(128,128,128,.2);}
+</style>
+""", unsafe_allow_html=True)
 
 CUBE_API_URL = "http://localhost:4000/cubejs-api/v1/load"
+CUBE = "monthly_dashboard_summary"
 
+CATEGORY=f"{CUBE}.category"
+MONTH_NAME=f"{CUBE}.month_name"
+MONTH_NUMBER=f"{CUBE}.month_number"
+YEAR=f"{CUBE}.year"
+SALES=f"{CUBE}.total_sales"
+REVENUE=f"{CUBE}.total_revenue"
+ORDERS=f"{CUBE}.total_orders"
+CUSTOMERS=f"{CUBE}.total_customers"
+PROFIT=f"{CUBE}.total_profit"
 
-def get_cube_data(query):
+def cube(query):
     try:
-        response = requests.get(
-            CUBE_API_URL,
-            params={"query": json.dumps(query)},
-            timeout=30
-        )
-
-        response.raise_for_status()
-
-        result = response.json()
-
-        if "data" in result:
-            return pd.DataFrame(result["data"])
-
-        st.error("Cube API returned no data.")
+        r=requests.get(CUBE_API_URL,params={"query":json.dumps(query)},timeout=30)
+        r.raise_for_status()
+        result=r.json()
+        return pd.DataFrame(result.get("data",[]))
+    except requests.exceptions.ConnectionError:
+        st.error("❌ Cannot connect to Cube. Make sure Docker Cube is running on port 4000.")
         return pd.DataFrame()
-
     except requests.exceptions.RequestException as e:
-        st.error(f"Could not connect to Cube API: {e}")
+        st.error(f"❌ Cube API error: {e}")
         return pd.DataFrame()
-
     except Exception as e:
-        st.error(f"Something went wrong: {e}")
+        st.error(f"❌ Error: {e}")
         return pd.DataFrame()
 
-# --------------------------------------------------
-# GET FILTER OPTIONS FROM CUBE
-# --------------------------------------------------
+# Filter options
+options_df=cube({"dimensions":[CATEGORY,YEAR]})
 
-filter_query = {
-    "dimensions": [
-        "monthly_dashboard_summary.category",
-        "monthly_dashboard_summary.year"
-    ]
-}
-
-filter_df = get_cube_data(filter_query)
-
-if not filter_df.empty:
-
-    category_column = "monthly_dashboard_summary.category"
-    year_column = "monthly_dashboard_summary.year"
-
-    categories = sorted(
-        filter_df[category_column]
-        .dropna()
-        .unique()
-        .tolist()
-    )
-
-    years = sorted(
-        filter_df[year_column]
-        .dropna()
-        .astype(str)
-        .unique()
-        .tolist()
-    )
-
+if not options_df.empty:
+    categories=sorted(options_df[CATEGORY].dropna().astype(str).unique().tolist())
+    years=sorted(options_df[YEAR].dropna().astype(str).unique().tolist())
 else:
-    categories = []
-    years = []
+    categories,years=[],[]
 
-# --------------------------------------------------
-# SIDEBAR FILTERS
-# --------------------------------------------------
-
-st.sidebar.markdown(
-    """
-    <div style="padding-bottom: 10px;">
-        <h1 style="margin-bottom: 0;">🔍 MetricMind</h1>
-        <p style="margin-top: 4px; opacity: 0.7;">
-            Dashboard Filters
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
+st.sidebar.markdown("## 🔍 MetricMind")
+st.sidebar.caption("Dashboard Filters")
 st.sidebar.divider()
 
-# Category filter
-category_options = ["All"] + categories
-
-category = st.sidebar.selectbox(
-    "🛍️ Select Category",
-    category_options
-)
-
-# Year filter
-year_options = ["All"] + years
-
-year = st.sidebar.selectbox(
-    "📅 Select Year",
-    year_options
-)
+category=st.sidebar.selectbox("🛍️ Select Category",["All"]+categories)
+year=st.sidebar.selectbox("📅 Select Year",["All"]+years)
 
 st.sidebar.divider()
-
-# Current selection
 st.sidebar.markdown("### 📌 Current Selection")
-
-selection_col1, selection_col2 = st.sidebar.columns(2)
-
-with selection_col1:
-    st.sidebar.caption("Category")
-    st.sidebar.write(f"**{category}**")
-
-with selection_col2:
-    st.sidebar.caption("Year")
-    st.sidebar.write(f"**{year}**")
-
+st.sidebar.write(f"**Category:** {category}")
+st.sidebar.write(f"**Year:** {year}")
 st.sidebar.divider()
+st.sidebar.markdown("### 🟢 Dashboard Status")
+st.sidebar.write("**Cube API:** Connected")
+st.sidebar.write("**Data Source:** Snowflake")
 
-# Dashboard status
-st.sidebar.markdown(
-    """
-    ### 🟢 Dashboard Status
-    **Cube API:** Connected  
-    **Data Source:** Snowflake
-    """
-)
+filters=[]
+if category!="All":
+    filters.append({"member":CATEGORY,"operator":"equals","values":[category]})
+if year!="All":
+    filters.append({"member":YEAR,"operator":"equals","values":[year]})
 
-# --------------------------------------------------
-# CUBE QUERY
-# --------------------------------------------------
+def with_filters(q):
+    if filters:
+        q["filters"]=filters
+    return q
 
-query = {
-    "measures": [
-        "monthly_dashboard_summary.total_sales",
-        "monthly_dashboard_summary.total_revenue",
-        "monthly_dashboard_summary.total_orders",
-        "monthly_dashboard_summary.total_customers",
-        "monthly_dashboard_summary.total_profit"
-    ],
-    "dimensions": [
-        "monthly_dashboard_summary.month_name",
-        "monthly_dashboard_summary.category",
-        "monthly_dashboard_summary.year"
-    ]
-}
+# IMPORTANT: KPI query has NO dimensions.
+# This prevents monthly/category rows from being summed twice.
+kpi=cube(with_filters({
+    "measures":[SALES,REVENUE,ORDERS,CUSTOMERS,PROFIT]
+}))
 
-# --------------------------------------------------
-# APPLY FILTERS
-# --------------------------------------------------
-
-filters = []
-
-if category != "All":
-    filters.append({
-        "member": "monthly_dashboard_summary.category",
-        "operator": "equals",
-        "values": [category]
-    })
-
-if year != "All":
-    filters.append({
-        "member": "monthly_dashboard_summary.year",
-        "operator": "equals",
-        "values": [year]
-    })
-
-if filters:
-    query["filters"] = filters
-
-# --------------------------------------------------
-# GET DATA
-# --------------------------------------------------
-
-df = get_cube_data(query)
-
-# --------------------------------------------------
-# CHECK DATA
-# --------------------------------------------------
-
-if df.empty:
-    st.warning("⚠️ No data available for the selected filters.")
-    st.write("Cube returned:", df)
+if kpi.empty:
+    st.warning("⚠️ No KPI data available for the selected filters.")
     st.stop()
 
-# --------------------------------------------------
-# CONVERT NUMERIC COLUMNS
-# --------------------------------------------------
+def value(col):
+    if col not in kpi.columns:
+        return 0
+    return float(pd.to_numeric(kpi[col],errors="coerce").fillna(0).iloc[0])
 
-numeric_columns = [
-    "monthly_dashboard_summary.total_sales",
-    "monthly_dashboard_summary.total_revenue",
-    "monthly_dashboard_summary.total_orders",
-    "monthly_dashboard_summary.total_customers",
-    "monthly_dashboard_summary.total_profit"
-]
+total_sales=value(SALES)
+total_revenue=value(REVENUE)
+total_orders=value(ORDERS)
+total_customers=value(CUSTOMERS)
+total_profit=value(PROFIT)
+profit_margin=(total_profit/total_sales*100) if total_sales else 0
 
-for col in numeric_columns:
-    if col in df.columns:
-        df[col] = pd.to_numeric(
-            df[col],
-            errors="coerce"
-        ).fillna(0)
+# Monthly query
+monthly=cube(with_filters({
+    "measures":[SALES,REVENUE,ORDERS,PROFIT],
+    "dimensions":[MONTH_NAME,MONTH_NUMBER]
+}))
 
-# --------------------------------------------------
-# MONTH SORTING
-# --------------------------------------------------
+if monthly.empty:
+    st.warning("⚠️ No monthly data available.")
+    st.stop()
 
-month_order = [
-    "Jan", "Feb", "Mar", "Apr",
-    "May", "Jun", "Jul", "Aug",
-    "Sep", "Oct", "Nov", "Dec"
-]
+for col in [SALES,REVENUE,ORDERS,PROFIT]:
+    if col in monthly.columns:
+        monthly[col]=pd.to_numeric(monthly[col],errors="coerce").fillna(0)
 
-month_column = "monthly_dashboard_summary.month_name"
+monthly[MONTH_NUMBER]=pd.to_numeric(monthly[MONTH_NUMBER],errors="coerce")
+monthly=monthly.sort_values(MONTH_NUMBER)
 
-if month_column in df.columns:
+# Category query
+cat=cube(with_filters({
+    "measures":[SALES],
+    "dimensions":[CATEGORY]
+}))
 
-    df[month_column] = pd.Categorical(
-        df[month_column],
-        categories=month_order,
-        ordered=True
-    )
+if not cat.empty:
+    cat[SALES]=pd.to_numeric(cat[SALES],errors="coerce").fillna(0)
 
-    df = df.sort_values(month_column)
+st.caption(f"📌 Category: **{category}** | Year: **{year}**")
 
-# --------------------------------------------------
-# FILTER SUMMARY
-# --------------------------------------------------
-
-st.caption(
-    f"📌 Category: **{category}**  |  "
-    f"Year: **{year}**"
-)
-
-# --------------------------------------------------
-# KPI CALCULATIONS
-# --------------------------------------------------
-
-total_sales = df[
-    "monthly_dashboard_summary.total_sales"
-].sum()
-
-total_revenue = df[
-    "monthly_dashboard_summary.total_revenue"
-].sum()
-
-total_orders = df[
-    "monthly_dashboard_summary.total_orders"
-].sum()
-
-total_customers = df[
-    "monthly_dashboard_summary.total_customers"
-].sum()
-
-total_profit = df[
-    "monthly_dashboard_summary.total_profit"
-].sum()
-
-# --------------------------------------------------
-# KPI CARDS
-# --------------------------------------------------
-
+# KPIs
 st.subheader("📌 Key Performance Indicators")
-
-# Calculate profit margin
-if total_sales > 0:
-    profit_margin = (total_profit / total_sales) * 100
-else:
-    profit_margin = 0
-
-# KPI row
-col1, col2, col3, col4, col5 = st.columns(5)
-
-with col1:
-    st.metric(
-        label="💰 Total Sales",
-        value=f"₹{total_sales:,.0f}"
-    )
-
-with col2:
-    st.metric(
-        label="💵 Revenue",
-        value=f"₹{total_revenue:,.0f}"
-    )
-
-with col3:
-    st.metric(
-        label="📈 Total Profit",
-        value=f"₹{total_profit:,.0f}"
-    )
-
-with col4:
-    st.metric(
-        label="📦 Total Orders",
-        value=f"{total_orders:,.0f}"
-    )
-
-with col5:
-    st.metric(
-        label="👥 Customers",
-        value=f"{total_customers:,.0f}"
-    )
-
-# Profit margin
-st.caption(
-    f"📊 Profit Margin: **{profit_margin:.2f}%**"
-)
-
-# --------------------------------------------------
-# CHARTS
-# --------------------------------------------------
+c1,c2,c3,c4,c5=st.columns(5)
+c1.metric("💰 Total Sales",f"₹{total_sales:,.0f}")
+c2.metric("💵 Revenue",f"₹{total_revenue:,.0f}")
+c3.metric("📈 Total Profit",f"₹{total_profit:,.0f}")
+c4.metric("📦 Total Orders",f"{total_orders:,.0f}")
+c5.metric("👥 Customers",f"{total_customers:,.0f}")
+st.caption(f"📊 Profit Margin: **{profit_margin:.2f}%**")
 
 st.subheader("📊 Sales & Revenue Analytics")
 
-# --------------------------------------------------
-# ROW 1 — SALES + CATEGORY
-# --------------------------------------------------
-
-chart_col1, chart_col2 = st.columns(2)
-
-with chart_col1:
-
+# Monthly Sales
+a,b=st.columns(2)
+with a:
     st.markdown("### 📈 Monthly Sales")
+    x=monthly[[MONTH_NAME,SALES]].rename(columns={MONTH_NAME:"Month",SALES:"Sales"}).set_index("Month")
+    st.line_chart(x)
 
-    sales_chart = df[
-        [
-            month_column,
-            "monthly_dashboard_summary.total_sales"
-        ]
-    ].copy()
-
-    sales_chart = sales_chart.rename(
-        columns={
-            month_column: "Month",
-            "monthly_dashboard_summary.total_sales": "Sales"
-        }
-    )
-
-    sales_chart = sales_chart.set_index("Month")
-
-    st.line_chart(sales_chart)
-
-
-with chart_col2:
-
+# Category Sales
+with b:
     st.markdown("### 🛍️ Category-wise Sales")
+    if not cat.empty:
+        x=cat[[CATEGORY,SALES]].rename(columns={CATEGORY:"Category",SALES:"Sales"})
+        x=x.groupby("Category")["Sales"].sum()
+        st.bar_chart(x)
+    else:
+        st.info("No category data available.")
 
-    category_sales = (
-        df.groupby(
-            "monthly_dashboard_summary.category",
-            observed=True
-        )["monthly_dashboard_summary.total_sales"]
-        .sum()
-        .reset_index()
-    )
-
-    category_sales = category_sales.rename(
-        columns={
-            "monthly_dashboard_summary.category": "Category",
-            "monthly_dashboard_summary.total_sales": "Sales"
-        }
-    )
-
-    if not category_sales.empty:
-        st.bar_chart(
-            category_sales.set_index("Category")
-        )
-
-
-# --------------------------------------------------
-# ROW 2 — REVENUE + ORDERS
-# --------------------------------------------------
-
-chart_col3, chart_col4 = st.columns(2)
-
-with chart_col3:
-
+# Revenue + Orders
+a,b=st.columns(2)
+with a:
     st.markdown("### 💵 Revenue Trend")
+    x=monthly[[MONTH_NAME,REVENUE]].rename(columns={MONTH_NAME:"Month",REVENUE:"Revenue"}).set_index("Month")
+    st.area_chart(x)
 
-    revenue_chart = df[
-        [
-            month_column,
-            "monthly_dashboard_summary.total_revenue"
-        ]
-    ].copy()
-
-    revenue_chart = revenue_chart.rename(
-        columns={
-            month_column: "Month",
-            "monthly_dashboard_summary.total_revenue": "Revenue"
-        }
-    )
-
-    revenue_chart = revenue_chart.set_index("Month")
-
-    st.area_chart(revenue_chart)
-
-
-with chart_col4:
-
+with b:
     st.markdown("### 📦 Orders Trend")
+    x=monthly[[MONTH_NAME,ORDERS]].rename(columns={MONTH_NAME:"Month",ORDERS:"Orders"}).set_index("Month")
+    st.bar_chart(x)
 
-    orders_chart = df[
-        [
-            month_column,
-            "monthly_dashboard_summary.total_orders"
-        ]
-    ].copy()
-
-    orders_chart = orders_chart.rename(
-        columns={
-            month_column: "Month",
-            "monthly_dashboard_summary.total_orders": "Orders"
-        }
-    )
-
-    orders_chart = orders_chart.set_index("Month")
-
-    st.bar_chart(orders_chart)
-
-
-# --------------------------------------------------
-# ROW 3 — REVENUE VS PROFIT
-# --------------------------------------------------
-
+# Revenue vs Profit
 st.markdown("### 💰 Revenue vs Profit")
+x=monthly[[MONTH_NAME,REVENUE,PROFIT]].rename(
+    columns={MONTH_NAME:"Month",REVENUE:"Revenue",PROFIT:"Profit"}
+).set_index("Month")
+st.line_chart(x)
 
-revenue_profit_chart = df[
-    [
-        month_column,
-        "monthly_dashboard_summary.total_revenue",
-        "monthly_dashboard_summary.total_profit"
-    ]
-].copy()
+# Sales summary
+st.subheader("📊 Sales Performance Summary")
+month_order=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
 
-revenue_profit_chart = revenue_profit_chart.rename(
-    columns={
-        month_column: "Month",
-        "monthly_dashboard_summary.total_revenue": "Revenue",
-        "monthly_dashboard_summary.total_profit": "Profit"
-    }
-)
+trend=monthly.copy()
+trend[MONTH_NAME]=pd.Categorical(trend[MONTH_NAME],categories=month_order,ordered=True)
+trend=trend.sort_values(MONTH_NAME)
 
-revenue_profit_chart = (
-    revenue_profit_chart
-    .groupby("Month", observed=True)[
-        ["Revenue", "Profit"]
-    ]
-    .sum()
-)
+monthly_sales=trend.groupby(MONTH_NAME,observed=True)[SALES].sum()
 
-st.line_chart(revenue_profit_chart)
-# --------------------------------------------------
-# BUSINESS INSIGHTS
-# --------------------------------------------------
+if not monthly_sales.empty:
+    high_month=monthly_sales.idxmax()
+    high_sales=monthly_sales.max()
+    low_month=monthly_sales.idxmin()
+    low_sales=monthly_sales.min()
+    avg_sales=monthly_sales.mean()
+else:
+    high_month=low_month="N/A"
+    high_sales=low_sales=avg_sales=0
 
+a,b,c,d=st.columns(4)
+a.metric("📈 Highest Sales Month",high_month)
+b.metric("💰 Highest Monthly Sales",f"₹{high_sales:,.0f}")
+c.metric("📉 Lowest Sales Month",low_month)
+d.metric("📊 Avg. Monthly Sales",f"₹{avg_sales:,.0f}")
+
+# Trend
+st.markdown("### 📈 Sales Trend")
+if len(monthly_sales)>=2:
+    latest_month=monthly_sales.index[-1]
+    previous_month=monthly_sales.index[-2]
+    latest_sales=monthly_sales.iloc[-1]
+    previous_sales=monthly_sales.iloc[-2]
+    change=((latest_sales-previous_sales)/previous_sales*100) if previous_sales else 0
+
+    a,b,c=st.columns(3)
+    a.metric("📅 Latest Month",latest_month)
+    b.metric("💰 Latest Sales",f"₹{latest_sales:,.0f}")
+    c.metric("📊 Month-over-Month Change",f"{change:+.2f}%")
+else:
+    st.info("Not enough monthly data to calculate the sales trend.")
+
+# Insights
 st.subheader("🤖 MetricMind Business Insights")
 
-# Top performing category
-if not category_sales.empty:
-
-    top_category = category_sales.loc[
-        category_sales["Sales"].idxmax(),
-        "Category"
-    ]
-
-    top_category_sales = category_sales.loc[
-        category_sales["Sales"].idxmax(),
-        "Sales"
-    ]
-
+if not cat.empty:
+    top_row=cat.loc[cat[SALES].idxmax()]
+    top_category=top_row[CATEGORY]
+    top_category_sales=top_row[SALES]
 else:
-    top_category = "N/A"
-    top_category_sales = 0
+    top_category="N/A"
+    top_category_sales=0
 
-# Best sales month
-monthly_sales = (
-    df.groupby(
-        month_column,
-        observed=True
-    )["monthly_dashboard_summary.total_sales"]
-    .sum()
-)
+top_month=monthly_sales.idxmax() if not monthly_sales.empty else "N/A"
+top_month_sales=monthly_sales.max() if not monthly_sales.empty else 0
+aov=total_sales/total_orders if total_orders else 0
 
-if not monthly_sales.empty:
-    top_month = monthly_sales.idxmax()
-    top_month_sales = monthly_sales.max()
-else:
-    top_month = "N/A"
-    top_month_sales = 0
-# --------------------------------------------------
-# SALES PERFORMANCE SUMMARY
-# --------------------------------------------------
-
-st.subheader("📊 Sales Performance Summary")
-
-# Highest and lowest sales month
-if not monthly_sales.empty:
-
-    highest_sales_month = monthly_sales.idxmax()
-    highest_month_sales = monthly_sales.max()
-
-    lowest_sales_month = monthly_sales.idxmin()
-    lowest_month_sales = monthly_sales.min()
-
-    average_monthly_sales = monthly_sales.mean()
-
-else:
-
-    highest_sales_month = "N/A"
-    highest_month_sales = 0
-
-    lowest_sales_month = "N/A"
-    lowest_month_sales = 0
-
-    average_monthly_sales = 0
-
-summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
-
-with summary_col1:
-    st.metric(
-        "📈 Highest Sales Month",
-        highest_sales_month
-    )
-
-with summary_col2:
-    st.metric(
-        "💰 Highest Monthly Sales",
-        f"₹{highest_month_sales:,.0f}"
-    )
-
-with summary_col3:
-    st.metric(
-        "📉 Lowest Sales Month",
-        lowest_sales_month
-    )
-
-with summary_col4:
-    st.metric(
-        "📊 Avg. Monthly Sales",
-        f"₹{average_monthly_sales:,.0f}"
-    )
-# --------------------------------------------------
-# SALES TREND
-# --------------------------------------------------
-
-st.markdown("### 📈 Sales Trend")
-
-if len(monthly_sales) >= 2:
-
-    sorted_sales = monthly_sales.sort_index()
-
-    latest_month = sorted_sales.index[-1]
-    previous_month = sorted_sales.index[-2]
-
-    latest_sales = sorted_sales.iloc[-1]
-    previous_sales = sorted_sales.iloc[-2]
-
-    if previous_sales != 0:
-        sales_change = (
-            (latest_sales - previous_sales)
-            / previous_sales
-        ) * 100
-    else:
-        sales_change = 0
-
-    trend_col1, trend_col2, trend_col3 = st.columns(3)
-
-    with trend_col1:
-        st.metric(
-            "📅 Latest Month",
-            latest_month
-        )
-
-    with trend_col2:
-        st.metric(
-            "💰 Latest Sales",
-            f"₹{latest_sales:,.0f}"
-        )
-
-    with trend_col3:
-        st.metric(
-            "📊 Month-over-Month Change",
-            f"{sales_change:+.2f}%"
-        )
-
-else:
-    st.info(
-        "Not enough monthly data available to calculate sales trend."
-    )
-# Average Order Value
-if total_orders > 0:
-    average_order_value = total_sales / total_orders
-else:
-    average_order_value = 0
-
-# Display insights
-insight_col1, insight_col2, insight_col3 = st.columns(3)
-
-with insight_col1:
-    st.info(
-        f"""
-        🏆 **Top Category**
-
-        ### {top_category}
-
-        Sales: **₹{top_category_sales:,.0f}**
-        """
-    )
-
-with insight_col2:
-    st.info(
-        f"""
-        📅 **Best Sales Month**
-
-        ### {top_month}
-
-        Sales: **₹{top_month_sales:,.0f}**
-        """
-    )
-
-with insight_col3:
-    st.info(
-        f"""
-        🛒 **Average Order Value**
-
-        ### ₹{average_order_value:,.0f}
-
-        Based on total sales and orders
-        """
-    )
+a,b,c=st.columns(3)
+with a:
+    st.info(f"🏆 **Top Category**\n\n### {top_category}\n\nSales: **₹{top_category_sales:,.0f}**")
+with b:
+    st.info(f"📅 **Best Sales Month**\n\n### {top_month}\n\nSales: **₹{top_month_sales:,.0f}**")
+with c:
+    st.info(f"🛒 **Average Order Value**\n\n### ₹{aov:,.0f}\n\nBased on total sales and orders")
 
 st.success(
-    f"""
-    💰 **Total Sales:** ₹{total_sales:,.0f}  
-    💵 **Total Revenue:** ₹{total_revenue:,.0f}  
-    📈 **Total Profit:** ₹{total_profit:,.0f}  
-    📊 **Profit Margin:** {profit_margin:.2f}%
-    """
+    f"💰 **Total Sales:** ₹{total_sales:,.0f}\n\n"
+    f"💵 **Total Revenue:** ₹{total_revenue:,.0f}\n\n"
+    f"📈 **Total Profit:** ₹{total_profit:,.0f}\n\n"
+    f"📊 **Profit Margin:** {profit_margin:.2f}%"
 )
-# --------------------------------------------------
-# DOWNLOAD REPORT
-# --------------------------------------------------
 
+# Download
 st.subheader("📥 Download Filtered Report")
-
-csv = df.to_csv(index=False)
-
-# Create a clean filename based on filters
-category_name = str(category).replace(" ", "_")
-year_name = str(year).replace(" ", "_")
-
-report_filename = (
-    f"MetricMind_{category_name}_{year_name}.csv"
-)
+report=monthly.drop(columns=[MONTH_NUMBER],errors="ignore")
+filename=f"MetricMind_{str(category).replace(' ','_')}_{str(year).replace(' ','_')}.csv"
 
 st.download_button(
-    label="⬇️ Download CSV Report",
-    data=csv,
-    file_name=report_filename,
+    "⬇️ Download CSV Report",
+    data=report.to_csv(index=False),
+    file_name=filename,
     mime="text/csv"
 )
 
-st.caption(
-    f"Report contains the data currently filtered by "
-    f"Category: **{category}** and Year: **{year}**."
-)
-# --------------------------------------------------
-# DATA TABLE
-# --------------------------------------------------
-
 st.subheader("📋 Cube Data")
-
-st.dataframe(
-    df,
-    use_container_width=True
-)
+st.dataframe(report,use_container_width=True)
