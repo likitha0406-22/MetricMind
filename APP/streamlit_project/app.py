@@ -6,7 +6,7 @@ import json
 st.set_page_config(page_title="MetricMind Dashboard", page_icon="📊", layout="wide")
 
 st.title("📊 MetricMind")
-st.subheader("Retail Business Intelligence & Analytics Dashboard")
+st.subheader("CUBES_SCHEMA Business Intelligence & Analytics Dashboard")
 st.caption("⚡ Analytics powered by Cube API & Snowflake")
 st.success("🟢 Live Dashboard")
 
@@ -20,6 +20,8 @@ section[data-testid="stSidebar"] {border-right:1px solid rgba(128,128,128,.2);}
 """, unsafe_allow_html=True)
 
 CUBE_API_URL = "http://localhost:4000/cubejs-api/v1/load"
+CHAT_API_URL= "http://localhost:8000/chat"
+
 CUBE = "monthly_dashboard_summary"
 
 CATEGORY=f"{CUBE}.category"
